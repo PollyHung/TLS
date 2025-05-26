@@ -57,6 +57,7 @@
 preprocess <- function(samples,
                        path){
 
+  message("________________Start of Preprocessing________________✧*｡٩(ˊᗜˋ*)و✧*｡________________")
   message("Read in all samples")
   myList <- list()
   variableFeatures <- list()
@@ -80,6 +81,7 @@ preprocess <- function(samples,
   message("Merge seurat object")
   seurat <- Reduce(function(x, y) merge(x, y), myList)
 
+  message("________________((꜆꜄꜆ ˙꒳˙)꜆꜄꜆ｵﾗｵﾗｵﾗｵﾗｲ________________")
   message("Add Quality Control Metrics")
   seurat[["mito_percent"]] <- Seurat::PercentageFeatureSet(seurat, pattern = "^MT-")
   seurat[["ribo_percent"]] <- Seurat::PercentageFeatureSet(seurat, pattern = "^RP[SL]")
@@ -114,6 +116,8 @@ preprocess <- function(samples,
   # seurat@meta.data$B.cell <- rowMeans(FetchData(seurat, annotateTLS::b_cell_markers, layer = "scale.data"))
   # seurat@meta.data$T.cell <- rowMeans(FetchData(seurat, annotateTLS::t_cell_markers, layer = "scale.data"))
   # seurat@meta.data$fDC <- rowMeans(FetchData(seurat, annotateTLS::follicular_dc, layer = "scale.data"))
+
+  message("________________End of Preprocessing________________*ଘ(੭*ˊᵕˋ)੭* ੈ✩‧₊˚________________")
   return(seurat)
 }
 

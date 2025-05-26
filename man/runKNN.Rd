@@ -4,42 +4,67 @@
 \alias{runKNN}
 \title{Run K-Nearest Neighbors for TLS Identification}
 \usage{
-runKNN(seurat, exp_threshold = 0.7, min_spots = 3, max_distance = 8)
+runKNN(
+  seurat,
+  exp_threshold = 0.98,
+  min_spots = 3,
+  max_distance = NULL,
+  distance_multiplier = 2
+)
 }
 \arguments{
-\item{seurat}{A \code{Seurat} object containing spatial transcriptomics data.}
+\item{seurat}{A \code{Seurat} object containing spatial transcriptomics data with
+coordinates stored in the \code{images} slot.}
 
-\item{exp_threshold}{A numeric value (default: 0.70) indicating the expression threshold
-for identifying high-expression spots.}
+\item{exp_threshold}{A numeric value (default: 0.98) indicating the quantile threshold
+for identifying high-expression spots (e.g., 0.98 = top 2% of spots).}
 
 \item{min_spots}{An integer (default: 3) representing the minimum number of adjacent spots
 required to form a valid TLS cluster.}
 
-\item{max_distance}{A numeric value (default: 8) defining the maximum distance between
-adjacent spots to be considered neighbors.}
+\item{max_distance}{An optional numeric value defining the absolute maximum distance between
+adjacent spots (in coordinate units). If NULL (default), calculates automatically.}
+
+\item{distance_multiplier}{A numeric value (default: 2) scaling factor applied to the
+median nearest-neighbor distance when auto-calculating \code{max_distance}.}
 }
 \value{
-A modified \code{Seurat} object with an additional metadata column \code{TLS_identity}
-        indicating whether each spot is part of a TLS or not.
+A modified \code{Seurat} object with:
+\itemize{
+  \item New metadata column \code{TLS_identity} ("TLS" or "not TLS")
+  \item Preserved all original data and reductions
+}
 }
 \description{
 Identifies tumor-associated lymphoid structures (TLS) in spatial transcriptomics data
-using a K-nearest neighbors approach based on expression thresholds and spatial proximity.
+using an adaptive K-nearest neighbors approach that automatically adjusts to each sample's
+spatial characteristics.
 }
 \details{
-This function processes each sample in the provided \code{Seurat} object to:
+The function performs adaptive TLS detection by:
 \enumerate{
-  \item Subset data to individual samples.
-  \item Identify high expression spots based on the specified threshold.
-  \item Calculate dynamic neighbors using a K-nearest neighbors approach.
-  \item Create an adjacency matrix for identified neighbors.
-  \item Find connected components in the adjacency matrix to identify valid TLS clusters.
-  \item Label spots as "TLS" or "not TLS" based on their cluster membership.
+  \item Calculating sample-specific distance thresholds based on spot spacing
+  \item Identifying high-expression spots using the specified quantile threshold
+  \item Building KNN graphs with dynamic neighbor counts (k = min(6, n_spots-1))
+  \item Filtering neighbors by adaptive spatial constraints
+  \item Identifying connected components as TLS candidates
+  \item Applying size thresholds to validate TLS clusters
 }
 }
+\section{Adaptive Distance Calculation}{
+
+When \code{max_distance = NULL}, the threshold is calculated as:
+\deqn{max\_distance = distance\_multiplier \times median(nearest\_neighbor\_distances)}
+This ensures automatic adjustment for samples with different spatial resolutions.
+}
+
 \examples{
 \donttest{
-seurat_obj <- runKNN(seurat, exp_threshold = 0.70, min_spots = 3, max_distance = 8)
+# Automatic distance calculation (recommended for multi-sample datasets)
+seurat <- runKNN(seurat, exp_threshold = 0.98, distance_multiplier = 2.5)
+
+# Manual distance threshold
+seurat <- runKNN(seurat, exp_threshold = 0.95, max_distance = 5)
 }
 
 }
