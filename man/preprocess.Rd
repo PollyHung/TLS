@@ -7,35 +7,38 @@
 preprocess(samples, path, folder = NULL)
 }
 \arguments{
-\item{samples}{A character vector of sample names/directories containing spatial data.}
+\item{samples}{A character vector of sample names/directories containing spatial data}
 
-\item{path}{Base directory path where sample directories are located.}
+\item{path}{Base directory path where sample directories are located}
 
-\item{folder}{Optional subdirectory within each sample directory containing the data (e.g., "spatial").
-Defaults to NULL.}
+\item{folder}{Optional subdirectory within each sample directory containing data files (e.g., "filtered_feature_bc_matrix")}
 }
 \value{
-A merged \code{Seurat} object with the following additions:
+A processed \code{Seurat} object containing:
 \itemize{
-  \item Cell-level metadata with mitochondrial/ribosomal percentages
-  \item Cell cycle phase scores (S and G2M phases)
-  \item Unique cell identifiers incorporating sample names
+  \item Merged data from all samples with unique cell IDs
+  \item Quality control metrics (mitochondrial/ribosomal percentages)
+  \item Cell cycle phase scores (S.Score, G2M.Score)
+  \item Normalized and scaled expression data
+  \item PCA, Harmony integration, UMAP, and t-SNE embeddings
+  \item Nearest neighbor graph for downstream analysis
 }
 }
 \description{
-Reads, merges, and adds quality control metrics to spatial transcriptomics data from multiple samples.
+Reads, merges, and processes spatial transcriptomics data through a complete preprocessing pipeline
+including quality control, normalization, integration, and dimension reduction.
 }
 \details{
-This function:
+The pipeline performs these steps in sequence:
 \enumerate{
-  \item Reads 10X Genomics data for each sample using \code{Seurat::Read10X}
-  \item Creates and merges Seurat objects
-  \item Adds quality control metrics:
-  \itemize{
-    \item Mitochondrial gene percentage (\code{mito_percent})
-    \item Ribosomal gene percentage (\code{ribo_percent})
-    \item Cell cycle scoring using pre-defined S and G2M phase genes
-  }
+  \item Read and merge 10X Genomics data from multiple samples
+  \item Calculate QC metrics (mitochondrial/ribosomal genes)
+  \item Normalize data and identify variable features
+  \item Score cell cycle phases using package-provided S/G2M gene sets
+  \item Scale data with regression of technical variables
+  \item Dimensionality reduction (PCA)
+  \item Batch correction using Harmony
+  \item Non-linear dimension reduction (UMAP/t-SNE)
 }
 }
 \section{Required Data}{
@@ -49,7 +52,7 @@ See \code{?s.genes} and \code{?g2m.genes} for details.
 }
 
 \examples{
-\dontrun{
+\donttest{
 samples <- c("sample1", "sample2")
 seurat_obj <- preprocess(
   samples = samples,

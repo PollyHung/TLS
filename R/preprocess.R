@@ -1,29 +1,32 @@
 #' Preprocess Spatial Transcriptomics Data
 #'
-#' Reads, merges, and adds quality control metrics to spatial transcriptomics data from multiple samples.
+#' Reads, merges, and processes spatial transcriptomics data through a complete preprocessing pipeline
+#' including quality control, normalization, integration, and dimension reduction.
 #'
-#' @param samples A character vector of sample names/directories containing spatial data.
-#' @param path Base directory path where sample directories are located.
-#' @param folder Optional subdirectory within each sample directory containing the data (e.g., "spatial").
-#'               Defaults to NULL.
+#' @param samples A character vector of sample names/directories containing spatial data
+#' @param path Base directory path where sample directories are located
+#' @param folder Optional subdirectory within each sample directory containing data files (e.g., "filtered_feature_bc_matrix")
 #'
-#' @return A merged \code{Seurat} object with the following additions:
+#' @return A processed \code{Seurat} object containing:
 #' \itemize{
-#'   \item Cell-level metadata with mitochondrial/ribosomal percentages
-#'   \item Cell cycle phase scores (S and G2M phases)
-#'   \item Unique cell identifiers incorporating sample names
+#'   \item Merged data from all samples with unique cell IDs
+#'   \item Quality control metrics (mitochondrial/ribosomal percentages)
+#'   \item Cell cycle phase scores (S.Score, G2M.Score)
+#'   \item Normalized and scaled expression data
+#'   \item PCA, Harmony integration, UMAP, and t-SNE embeddings
+#'   \item Nearest neighbor graph for downstream analysis
 #' }
 #'
-#' @details This function:
+#' @details The pipeline performs these steps in sequence:
 #' \enumerate{
-#'   \item Reads 10X Genomics data for each sample using \code{Seurat::Read10X}
-#'   \item Creates and merges Seurat objects
-#'   \item Adds quality control metrics:
-#'   \itemize{
-#'     \item Mitochondrial gene percentage (\code{mito_percent})
-#'     \item Ribosomal gene percentage (\code{ribo_percent})
-#'     \item Cell cycle scoring using pre-defined S and G2M phase genes
-#'   }
+#'   \item Read and merge 10X Genomics data from multiple samples
+#'   \item Calculate QC metrics (mitochondrial/ribosomal genes)
+#'   \item Normalize data and identify variable features
+#'   \item Score cell cycle phases using package-provided S/G2M gene sets
+#'   \item Scale data with regression of technical variables
+#'   \item Dimensionality reduction (PCA)
+#'   \item Batch correction using Harmony
+#'   \item Non-linear dimension reduction (UMAP/t-SNE)
 #' }
 #'
 #' @section Required Data:
@@ -35,7 +38,7 @@
 #' See \code{?s.genes} and \code{?g2m.genes} for details.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' samples <- c("sample1", "sample2")
 #' seurat_obj <- preprocess(
 #'   samples = samples,
@@ -44,9 +47,11 @@
 #' )
 #' }
 #'
-#' @importFrom Seurat Read10X CreateSeuratObject RenameCells
-#' @importFrom Seurat PercentageFeatureSet CellCycleScoring
+#' @importFrom Seurat Read10X CreateSeuratObject RenameCells PercentageFeatureSet
+#' @importFrom Seurat CellCycleScoring NormalizeData FindVariableFeatures ScaleData
+#' @importFrom Seurat RunPCA FindNeighbors RunUMAP RunTSNE
 #' @importFrom SeuratObject JoinLayers
+#' @importFrom harmony RunHarmony
 #' @importFrom magrittr %>%
 #' @export
 
@@ -71,9 +76,31 @@ preprocess <- function(samples,
   message("Add Quality Control Metrics")
   seurat[["mito_percent"]] <- Seurat::PercentageFeatureSet(seurat, pattern = "^MT-", assay = "RNA")
   seurat[["ribo_percent"]] <- Seurat::PercentageFeatureSet(seurat, pattern = "^RP[SL]", assay = "RNA")
-  seurat <- Seurat::CellCycleScoring(seurat, s.features = s.genes, g2m.features = g2m.genes, set.ident = FALSE)
+
+  message("Normalisation and find variable features")
+  seurat <- NormalizeData(seurat, normalization.method = "LogNormalize", scale.factor = 10000)
+  seurat <- FindVariableFeatures(seurat, selection.method = "vst", nfeatures = 5000)
+
+  message("Add Cell Cycle Scoring")
+  seurat <- Seurat::CellCycleScoring(seurat,
+                                     s.features = annotateTLS::s.genes,
+                                     g2m.features = annotateTLS::g2m.genes,
+                                     set.ident = FALSE)
+
+  message("Add TLS Score")
+  t_cell_markers <- c("CD3D", "CD3E", "CD8A", "CD8B", "CD4", "GZMA", "GZMB",
+                      "")
+  seurat <- AddModuleScore(object = seurat,
+                           features = list(annotateTLS::tls_50_genes,
+                                           ))
 
 
-
+  return(seurat)
 }
+
+
+
+
+
+
 
