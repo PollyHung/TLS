@@ -108,6 +108,8 @@ preprocess <- function(samples,
                            group.by = "orig.ident")
   seurat@meta.data <- seurat@meta.data %>%
     dplyr::rename(TLS = TLS1, B.cell = B.cell2, T.cell = T.cell3,  fDC = fDC4)
+
+  ## This is a separate Method
   # seurat@meta.data$TLS <- rowMeans(FetchData(seurat, annotateTLS::tls_50_genes, layer = "scale.data"))
   # seurat@meta.data$B.cell <- rowMeans(FetchData(seurat, annotateTLS::b_cell_markers, layer = "scale.data"))
   # seurat@meta.data$T.cell <- rowMeans(FetchData(seurat, annotateTLS::t_cell_markers, layer = "scale.data"))
