@@ -4,24 +4,24 @@
 \alias{preprocess}
 \title{Preprocess Spatial Transcriptomics Data}
 \usage{
-preprocess(samples, path, folder = NULL)
+preprocess(samples, path)
 }
 \arguments{
-\item{samples}{A character vector of sample names/directories containing spatial data}
+\item{samples}{A character vector of sample names/directories containing spatial data.}
 
-\item{path}{Base directory path where sample directories are located}
+\item{path}{Base directory path where sample directories are located.}
 
-\item{folder}{Optional subdirectory within each sample directory containing data files (e.g., "filtered_feature_bc_matrix")}
+\item{folder}{Optional subdirectory within each sample directory containing data files (e.g., "filtered_feature_bc_matrix").}
 }
 \value{
 A processed \code{Seurat} object containing:
 \itemize{
-  \item Merged data from all samples with unique cell IDs
-  \item Quality control metrics (mitochondrial/ribosomal percentages)
-  \item Cell cycle phase scores (S.Score, G2M.Score)
-  \item Normalized and scaled expression data
-  \item PCA, Harmony integration, UMAP, and t-SNE embeddings
-  \item Nearest neighbor graph for downstream analysis
+  \item Merged data from all samples with unique cell IDs.
+  \item Quality control metrics (mitochondrial/ribosomal percentages).
+  \item Cell cycle phase scores (S.Score, G2M.Score).
+  \item Normalized and scaled expression data.
+  \item PCA, Harmony integration, UMAP, and t-SNE embeddings.
+  \item Nearest neighbor graph for downstream analysis.
 }
 }
 \description{
@@ -31,22 +31,22 @@ including quality control, normalization, integration, and dimension reduction.
 \details{
 The pipeline performs these steps in sequence:
 \enumerate{
-  \item Read and merge 10X Genomics data from multiple samples
-  \item Calculate QC metrics (mitochondrial/ribosomal genes)
-  \item Normalize data and identify variable features
-  \item Score cell cycle phases using package-provided S/G2M gene sets
-  \item Scale data with regression of technical variables
-  \item Dimensionality reduction (PCA)
-  \item Batch correction using Harmony
-  \item Non-linear dimension reduction (UMAP/t-SNE)
+  \item Read and merge 10X Genomics data from multiple samples.
+  \item Calculate QC metrics (mitochondrial/ribosomal genes).
+  \item Normalize data and identify variable features.
+  \item Score cell cycle phases using package-provided S/G2M gene sets.
+  \item Scale data with regression of technical variables.
+  \item Dimensionality reduction (PCA).
+  \item Batch correction using Harmony.
+  \item Non-linear dimension reduction (UMAP/t-SNE).
 }
 }
 \section{Required Data}{
 
 Uses internal package data:
 \itemize{
-  \item \code{s.genes}: S-phase marker genes
-  \item \code{g2m.genes}: G2/M-phase marker genes
+  \item \code{s.genes}: S-phase marker genes.
+  \item \code{g2m.genes}: G2/M-phase marker genes.
 }
 See \code{?s.genes} and \code{?g2m.genes} for details.
 }
