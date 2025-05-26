@@ -68,7 +68,9 @@ preprocess <- function(samples,
     Idents(obj) <- i                                                            # add identity
     obj$orig.ident <- i                                                         # add identity
     obj <- Seurat::RenameCells(obj, new.names = paste0(i, "_",Cells(obj)))      # add name
-    obj <- SCTransform(obj, assay = "Spatial", verbose = FALSE)                 # perform SCT
+    obj <- SCTransform(obj, assay = "Spatial", verbose = FALSE,
+                       return.only.var.genes = FALSE, ,
+                       variable.features.n = nrow(obj)) # perform SCT
 
     DefaultAssay(obj) <- "SCT"
     variableFeatures[[i]] <- VariableFeatures(obj)
@@ -101,16 +103,17 @@ preprocess <- function(samples,
                                            annotateTLS::b_cell_markers,
                                            annotateTLS::t_cell_markers,
                                            annotateTLS::follicular_dc),
-                           name = c("TLS", "B.cell", "T.cell", "fDC"))
+                           name = c("TLS", "B.cell", "T.cell", "fDC"),
+                           slot = "data",
+                           group.by = "orig.ident")
   seurat@meta.data <- seurat@meta.data %>%
     dplyr::rename(TLS = TLS1, B.cell = B.cell2, T.cell = T.cell3,  fDC = fDC4)
-
+  # seurat@meta.data$TLS <- rowMeans(FetchData(seurat, annotateTLS::tls_50_genes, layer = "scale.data"))
+  # seurat@meta.data$B.cell <- rowMeans(FetchData(seurat, annotateTLS::b_cell_markers, layer = "scale.data"))
+  # seurat@meta.data$T.cell <- rowMeans(FetchData(seurat, annotateTLS::t_cell_markers, layer = "scale.data"))
+  # seurat@meta.data$fDC <- rowMeans(FetchData(seurat, annotateTLS::follicular_dc, layer = "scale.data"))
   return(seurat)
 }
-
-
-
-
 
 
 
