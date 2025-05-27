@@ -55,28 +55,42 @@
 #' @importFrom magrittr %>%
 #' @export
 preprocess <- function(samples,
+                       format = "raw", ## or processed
                        path){
 
   message("________________Start of Preprocessing________________✧*｡٩(ˊᗜˋ*)و✧*｡________________")
   message("Read in all samples")
   myList <- list()
   variableFeatures <- list()
-  for (i in samples){
-    message(paste0("Processing sample ", i))
-    dir <- file.path(path, i)                                                   # Get directory
-    obj <- Seurat::Load10X_Spatial(dir, slice = i)                              # Load Object
 
-    Idents(obj) <- i                                                            # add identity
-    obj$orig.ident <- i                                                         # add identity
-    obj <- Seurat::RenameCells(obj, new.names = paste0(i, "_",Cells(obj)))      # add name
-    obj <- SCTransform(obj, assay = "Spatial", verbose = FALSE,
-                       return.only.var.genes = FALSE, ,
-                       variable.features.n = nrow(obj)) # perform SCT
+  if(format == "raw"){
+    for (i in samples){
+      message("Loading in Raw Samples")
+      message(paste0("Processing sample ", i))
+      dir <- file.path(path, i)                                                   # Get directory
+      obj <- Seurat::Load10X_Spatial(dir, slice = i)                              # Load Object
 
-    DefaultAssay(obj) <- "SCT"
-    variableFeatures[[i]] <- VariableFeatures(obj)
-    myList[[i]] <- obj
+      Idents(obj) <- i                                                            # add identity
+      obj$orig.ident <- i                                                         # add identity
+      obj <- Seurat::RenameCells(obj, new.names = paste0(i, "_",Cells(obj)))      # add name
+      obj <- SCTransform(obj, assay = "Spatial", verbose = FALSE,
+                         return.only.var.genes = FALSE, ,
+                         variable.features.n = nrow(obj)) # perform SCT
+
+      DefaultAssay(obj) <- "SCT"
+      variableFeatures[[i]] <- VariableFeatures(obj)
+      myList[[i]] <- obj
+    }
+  } else if (format == "processed"){
+    message("Loading in Processed Samples")
+    for (i in samples){
+      obj.path <- file.path(path, i, "seurat.rds")
+      obj <- readRDS(obj.path)
+      variableFeatures[[i]] <- VariableFeatures(obj)
+      myList[[i]] <- obj
+    }
   }
+
 
   message("Merge seurat object")
   seurat <- Reduce(function(x, y) merge(x, y), myList)
@@ -93,11 +107,23 @@ preprocess <- function(samples,
   message("Run PCA, Find Neighbors, Find Clusters, Run UMAP, and Run TSNE")
   VariableFeatures(seurat) <- unique(unname(unlist(variableFeatures)))          # Manually Add the Variable Features Aggregated from Previous Attemps
   seurat <- RunPCA(seurat, verbose = FALSE)
-  seurat <- RunHarmony(seurat, group.by.vars = "orig.ident", reduction = "pca", reduction.save = "harmony", lambda = 1)
-  seurat <- FindNeighbors(seurat, dims = 1:30)
-  seurat <- FindClusters(seurat, verbose = FALSE)
-  seurat <- RunUMAP(seurat, dims = 1:30)
-  seurat <- RunTSNE(seurat, dims = 1:30)
+  if(length(unique(seurat$orig.ident)) > 1){
+    seurat <- RunHarmony(seurat,
+                         group.by.vars = "orig.ident",
+                         reduction = "pca",
+                         reduction.save = "harmony",
+                         lambda = 1)
+    seurat <- FindNeighbors(seurat, dims = 1:30, reduction = "harmony")
+    seurat <- FindClusters(seurat, verbose = FALSE, reduction = "harmony")
+    seurat <- RunUMAP(seurat, dims = 1:30, reduction = "harmony")
+    seurat <- RunTSNE(seurat, dims = 1:30, reduction = "harmony")
+  } else {
+    seurat <- FindNeighbors(seurat, dims = 1:30)
+    seurat <- FindClusters(seurat, verbose = FALSE)
+    seurat <- RunUMAP(seurat, dims = 1:30)
+    seurat <- RunTSNE(seurat, dims = 1:30)
+  }
+
 
   message("Add Module Scores for key markers")
   seurat <- AddModuleScore(object = seurat,

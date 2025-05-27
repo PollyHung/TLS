@@ -4,7 +4,7 @@
 \alias{preprocess}
 \title{Preprocess Spatial Transcriptomics Data}
 \usage{
-preprocess(samples, path)
+preprocess(samples, format = "raw", path)
 }
 \arguments{
 \item{samples}{A character vector of sample names/directories containing spatial data.}
