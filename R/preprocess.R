@@ -73,6 +73,7 @@ preprocess <- function(samples,
       Idents(obj) <- i                                                            # add identity
       obj$orig.ident <- i                                                         # add identity
       obj <- Seurat::RenameCells(obj, new.names = paste0(i, "_",Cells(obj)))      # add name
+      obj <- subset(obj, cells = rownames(GetTissueCoordinates(obj)))
       obj <- SCTransform(obj, assay = "Spatial", verbose = FALSE,
                          return.only.var.genes = FALSE, ,
                          variable.features.n = nrow(obj)) # perform SCT
