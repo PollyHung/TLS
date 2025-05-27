@@ -139,17 +139,19 @@ runKNN <- function(seurat,
       }
 
       seurat.sub$TLS_identity <- ifelse(tls_labels == 0, "not TLS", "TLS")
-      return(seurat.sub)
+      return(seurat.sub@meta.data)
 
     }, error = function(e) {
       message("\nError processing ", x, ": ", e$message)
       # Return object with default TLS identity
       seurat.sub$TLS_identity <- "not TLS"
-      return(seurat.sub)
+      return(seurat.sub@meta.data)
     })
   })
-  seurat2 <- Reduce(function(x, y) merge(x, y), myList)
-  return(seurat2)
+  new_meta <- do.call(rbind, myList)
+  new_meta <- new_meta[rownames(seurat@meta.data), ]
+  seurat@meta.data <- new_meta
+  return(seurat)
 }
 
 
