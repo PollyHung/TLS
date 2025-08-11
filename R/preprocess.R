@@ -74,7 +74,9 @@ preprocess <- function(samples,
       obj$orig.ident <- i                                                         # add identity
       obj <- Seurat::RenameCells(obj, new.names = paste0(i, "_",Cells(obj)))      # add name
       obj <- subset(obj, cells = rownames(GetTissueCoordinates(obj)))
-      obj <- SCTransform(obj, assay = "Spatial", verbose = FALSE,
+      obj <- subset(obj, subset = nCount_Spatial > 0)
+      obj <- NormalizeData(obj, verbose = FALSE)
+      obj <- SCTransform(obj, assay = "Spatial", verbose = TRUE,
                          return.only.var.genes = FALSE, ,
                          variable.features.n = nrow(obj)) # perform SCT
 
@@ -127,16 +129,22 @@ preprocess <- function(samples,
 
 
   message("Add Module Scores for key markers")
+  # seurat <- AddModuleScore(object = seurat,
+  #                          features = list(annotateTLS::tls_50_genes,
+  #                                          annotateTLS::b_cell_markers,
+  #                                          annotateTLS::t_cell_markers,
+  #                                          annotateTLS::follicular_dc),
+  #                          name = c("TLS", "B.cell", "T.cell", "fDC"),
+  #                          slot = "data",
+  #                          group.by = "orig.ident")
+  # seurat@meta.data <- seurat@meta.data %>%
+  #   dplyr::rename(TLS = TLS1, B.cell = B.cell2, T.cell = T.cell3,  fDC = fDC4)
   seurat <- AddModuleScore(object = seurat,
-                           features = list(annotateTLS::tls_50_genes,
-                                           annotateTLS::b_cell_markers,
-                                           annotateTLS::t_cell_markers,
-                                           annotateTLS::follicular_dc),
-                           name = c("TLS", "B.cell", "T.cell", "fDC"),
+                           features = list(annotateTLS::tls_50_genes),
+                           name = c("TLS"),
                            slot = "data",
                            group.by = "orig.ident")
-  seurat@meta.data <- seurat@meta.data %>%
-    dplyr::rename(TLS = TLS1, B.cell = B.cell2, T.cell = T.cell3,  fDC = fDC4)
+  seurat@meta.data <- seurat@meta.data %>% dplyr::rename(TLS = TLS1)
 
   ## This is a separate Method
   # seurat@meta.data$TLS <- rowMeans(FetchData(seurat, annotateTLS::tls_50_genes, layer = "scale.data"))

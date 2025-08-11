@@ -95,7 +95,7 @@ runKNN <- function(seurat,
       if(n_high == 0) {
         message("No high expression spots - skipping neighborhood analysis")
         seurat.sub$TLS_identity <- "not TLS"
-        return(seurat.sub)
+        return(seurat.sub@meta.data)
       }
 
       # Dynamic neighbor calculation
@@ -103,7 +103,7 @@ runKNN <- function(seurat,
       if(k < 1) {
         message("Insufficient spots for neighbor analysis")
         seurat.sub$TLS_identity <- "not TLS"
-        return(seurat.sub)
+        return(seurat.sub@meta.data)
       }
 
       # Build nearest neighbor graph
@@ -128,7 +128,7 @@ runKNN <- function(seurat,
       if(length(valid_tls) == 0) {
         message("No TLS clusters found meeting size threshold")
         seurat.sub$TLS_identity <- "not TLS"
-        return(seurat.sub)
+        return(seurat.sub@meta.data)
       }
 
       # Create TLS labels
@@ -149,7 +149,7 @@ runKNN <- function(seurat,
     })
   })
   new_meta <- do.call(rbind, myList)
-  new_meta <- new_meta[rownames(seurat@meta.data), ]
+  new_meta <- new_meta[Cells(seurat), ]
   seurat@meta.data <- new_meta
   return(seurat)
 }
