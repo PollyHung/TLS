@@ -1,7 +1,7 @@
 Package: annotateTLS
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
+Title: Detection and Annotation of Tertiary Lymphoid Structures in Spatial Transcriptomics Data
+Version: 0.2.0
 Authors@R: c(
     person(
       "Jane", "Doe",
@@ -9,11 +9,32 @@ Authors@R: c(
       role = c("aut", "cre")
     )
   )
-Description: More about what it does (maybe more than one line).
-    Continuation lines should be indented.
-License: What license is it under?
+Description: Provides comprehensive tools for detecting and annotating tertiary lymphoid structures (TLS)
+    in spatial transcriptomics data. Includes statistical thresholding methods, confidence scoring,
+    parameter optimization, and validation frameworks for robust TLS identification.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: 
-    R (>= 3.5)
+    R (>= 4.0)
+Imports:
+    Seurat (>= 4.0.0),
+    SeuratObject,
+    RANN,
+    igraph,
+    stats,
+    parallel,
+    magrittr,
+    dplyr,
+    harmony
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    RCTD,
+    SPOTlight,
+    spatstat,
+    FNN,
+    cluster
 RoxygenNote: 7.3.2
+VignetteBuilder: knitr
